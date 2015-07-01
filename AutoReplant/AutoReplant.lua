@@ -48,7 +48,9 @@ function OnPlayerRightClick(Player, X,Y,Z)
 			end
 		end
 
-		World:SpawnItemPickups(Pickups, X,Y,Z, 1)
+		if (Pickups:Size() > 0) then
+			World:SpawnItemPickups(Pickups, X,Y,Z, 5)
+		end
 		World:FastSetBlock(X,Y,Z, Type, 0)
 	end
 end
