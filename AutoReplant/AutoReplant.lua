@@ -44,7 +44,7 @@ function OnPlayerRightClick(Player, X,Y,Z)
 		else
 			amount = math.random(0,2)
 			if (amount ~= 0) then
-				Pickups:Add(cItem(E_ITEM_POTATO, math.random(0,2)))
+				Pickups:Add(cItem(E_ITEM_POTATO, amount))
 			end
 		end
 
