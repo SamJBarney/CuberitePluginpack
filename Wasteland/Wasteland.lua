@@ -1,6 +1,7 @@
 local PLUGIN = nil
 
 -- Load the recipies
+dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Items.lua")
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Recipies.lua")
 
 local RegisteredWorlds = {}
