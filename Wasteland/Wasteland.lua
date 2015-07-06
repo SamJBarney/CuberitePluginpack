@@ -65,6 +65,9 @@ function OnChunkGenerated(World, ChunkX, ChunkZ, ChunkDesc)
 				ChunkDesc:SetBlockType(x, y + 2, z, E_BLOCK_SAND)
 				ChunkDesc:SetBlockType(x, y + 3, z, E_BLOCK_SAND)
 				ChunkDesc:SetBlockType(x, y + 4, z, E_BLOCK_SAND)
+				if math.random() < 0.0003 then
+					ChunkDesc:SetBlockType(x, y + 5, z, E_BLOCK_DEAD_BUSH)
+				end
 			end
 		end
 
