@@ -50,11 +50,22 @@ end
 function OnChunkGenerated(World, ChunkX, ChunkZ, ChunkDesc)
 	--if (RegisteredWorlds[World.GetName()] ~= nil) then
 		-- Replace all water with air
-		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, 8,0, 0,0)
-		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, 9,0, 0,0)
+		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_STATIONARY_WATER,0, E_BLOCK_AIR,0)
+		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_WATER,0, E_BLOCK_AIR,0)
 
 		-- Replace clay with hardend clay
-		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, 82,0, 172,0)
+		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_CLAY,0, E_BLOCK_HARDENED_CLAY,0)
+
+		for x = 0,15 do
+			for z = 0,15 do
+				local y = ChunkDesc:GetHeight(x,z)
+				if (ChunkDesc:GetBlockType(x, y, z) ~= E_BLOCK_SAND) then
+					ChunkDesc:SetBlockTypeMeta(x, y, z, E_BLOCK_SAND, E_META_SAND_RED)
+				elseif math.random() < 0.55 then
+					ChunkDesc:SetBlockTypeMeta(x, y, z, E_BLOCK_SAND, E_META_SAND_RED)
+				end
+			end
+		end
 
 		return true
 	--end
