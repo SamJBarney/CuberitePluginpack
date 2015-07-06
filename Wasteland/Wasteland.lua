@@ -56,14 +56,14 @@ function OnChunkGenerated(World, ChunkX, ChunkZ, ChunkDesc)
 		-- Replace clay with hardend clay
 		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_CLAY,0, E_BLOCK_HARDENED_CLAY,0)
 
+		-- Cover the chunk with 4 deep in sand
 		for x = 0,15 do
 			for z = 0,15 do
 				local y = ChunkDesc:GetHeight(x,z)
-				if (ChunkDesc:GetBlockType(x, y, z) ~= E_BLOCK_SAND) then
-					ChunkDesc:SetBlockTypeMeta(x, y, z, E_BLOCK_SAND, E_META_SAND_RED)
-				elseif math.random() < 0.55 then
-					ChunkDesc:SetBlockTypeMeta(x, y, z, E_BLOCK_SAND, E_META_SAND_RED)
-				end
+				ChunkDesc:SetBlockType(x, y + 1, z, E_BLOCK_SAND)
+				ChunkDesc:SetBlockType(x, y + 2, z, E_BLOCK_SAND)
+				ChunkDesc:SetBlockType(x, y + 3, z, E_BLOCK_SAND)
+				ChunkDesc:SetBlockType(x, y + 4, z, E_BLOCK_SAND)
 			end
 		end
 
