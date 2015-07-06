@@ -55,6 +55,7 @@ function OnChunkGenerated(World, ChunkX, ChunkZ, ChunkDesc)
 
 		-- Replace clay with hardend clay
 		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_CLAY,0, E_BLOCK_HARDENED_CLAY,0)
+		ChunkDesc:ReplaceRelCuboid(0,15, 0,255, 0,15, E_BLOCK_DIRT,0, E_BLOCK_DIRT, E_META_DIRT_COARSE)
 
 		-- Cover the chunk with 4 deep in sand
 		for x = 0,15 do
