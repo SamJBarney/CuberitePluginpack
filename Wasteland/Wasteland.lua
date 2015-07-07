@@ -1,8 +1,13 @@
 local PLUGIN = nil
 
--- Load the recipies
+-- Item Definitions
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Items.lua")
+
+-- Crafting Related
+dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/CraftingRecipe.lua")
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Recipies.lua")
+
+-- Hook Files
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/BreakBlockHooks.lua")
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/RightClickHooks.lua")
 
@@ -106,17 +111,14 @@ function OnPreCrafting(Player, Grid, Recipe)
 		end
 	end
 
-	for i,v in ipairs(wasteland_Recipies) do 
-		if (compareRecipies(v,possible_recipie)) then
+	for i,recipe in ipairs(wasteland_Recipies) do 
+		if recipe:Compare(Grid) then
 			recipe_found = true
-			Recipe:SetResult(v.result)
-			for i = 1,9 do
-				local ingredient = v[i]
-				if (ingredient ~= nil) then
-					local count = i - 1
-					local y = math.floor(count / 3)
-					local x = count - y * 3
-					Recipe:SetIngredient(x, y, ingredient)
+			Recipe:SetResult(recipe:GetResult())
+
+			for x = 0, recipe:GetWidth() - 1 do
+				for y = 0, recipe:GetHeight() - 1 do
+					Recipe:SetIngredient(x,y, recipe:GetItem(x,y))
 				end
 			end
 			break
