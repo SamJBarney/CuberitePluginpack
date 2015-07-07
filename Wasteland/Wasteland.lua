@@ -86,9 +86,42 @@ end
 -- Crafting Callbacks
 function OnPreCrafting(Player, Grid, Recipe)
 	local recipe_found = false
-	local possible_recipie = {
+	local possible_recipie = {};
 
-	}
+	local width = Grid:GetWidth()
+	local height = Grid:GetHeight()
+
+	for x = 1,3 do
+		for y = 1,3 do
+			if (x <= width and y <= height) then
+				local item = Grid:GetItem(x - 1,y - 1)
+				if (item ~= nil and item.m_ItemCount ~= 0) then
+					table.insert(possible_recipie, item)
+				else
+					table.insert(possible_recipie, nil)
+				end
+			else
+				table.insert(possible_recipie, nil)
+			end
+		end
+	end
+
+	for i,v in ipairs(wasteland_Recipies) do 
+		if (compareRecipies(v,possible_recipie)) then
+			recipe_found = true
+			Recipe:SetResult(v.result)
+			for i = 1,9 do
+				local ingredient = v[i]
+				if (ingredient ~= nil) then
+					local count = i - 1
+					local y = math.floor(count / 3)
+					local x = count - y * 3
+					Recipe:SetIngredient(x, y, ingredient)
+				end
+			end
+			break
+		end
+	end
 
 
 	return recipe_found
