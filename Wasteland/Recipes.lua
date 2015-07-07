@@ -1,4 +1,4 @@
-wasteland_Recipies = {}
+wasteland_Recipes = {}
 
 local stick = cItem(E_ITEM_STICK)
 
@@ -9,4 +9,4 @@ tmp:SetItem(0,1, stick)
 tmp:SetItem(1,0, stick)
 tmp:SetItem(1,1, stick)
 
-table.insert(wasteland_Recipies, tmp)
+table.insert(wasteland_Recipes, tmp)
