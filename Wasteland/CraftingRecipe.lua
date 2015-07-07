@@ -1,11 +1,13 @@
-local CraftingRecipe = {}
-CraftingRecipe.mt = {}
-CraftingRecipe.prototype = { width=3, height=3, items={}, result=cItem()}
-CraftingRecipe.mt.__index = CraftingRecipe.prototype
+CraftingRecipe = {}
+CraftingRecipe.__index = { width=3, height=3, items={}, result=cItem()}
+
+function CraftingRecipe:GetIndex(X,Y)
+	return y * self.width + x + 1
+end
 
 function CraftingRecipe.new(width, height)
 	local tmp = {}
-	setmetatable(tmp, CraftingRecipe.mt)
+	setmetatable(tmp, CraftingRecipe)
 
 	-- set values
 	if width ~= nil then tmp.width = width end
@@ -55,20 +57,8 @@ function CraftingRecipe:ClearItem(X,Y)
 	return self:SetItem(X,Y, cItem())
 end
 
-function CraftingRecipe:Compare(a_Comparable, isCraftingRecipeType)
-	if isCraftingRecipeType == nil then
-		return self:CompareCraftingGrid(a_Comparable)
-	else
-		return self:CompareCraftingRecipe(a_Recipe)
-	end
-end
-
-local function CraftingRecipe:GetIndex(X,Y)
-	return y * self.width + x + 1
-end
-
 -- Returns true when the two CraftingRecipe objects have the same crafting inputs
-local function CraftingRecipe:CompareCraftingRecipe(a_Recipe)
+function CraftingRecipe:CompareCraftingRecipe(a_Recipe)
 	if a_Recipe.width ~= self.width or a_Recipe.height ~= self.height then return false end
 
 	local equal = true
@@ -88,7 +78,7 @@ local function CraftingRecipe:CompareCraftingRecipe(a_Recipe)
 	return true
 end
 
-local function CraftingRecipe:CompareCraftingGrid(a_Grid)
+function CraftingRecipe:CompareCraftingGrid(a_Grid)
 	local found = false
 	local matching_positions = {}
 	for x_offset = 0, a_Grid:GetWidth() - self:GetWidth() do
@@ -129,4 +119,13 @@ local function CraftingRecipe:CompareCraftingGrid(a_Grid)
 	end
 
 	return found
+end
+
+
+function CraftingRecipe:Compare(a_Comparable, isCraftingRecipeType)
+	if isCraftingRecipeType == nil then
+		return self:CompareCraftingGrid(a_Comparable)
+	else
+		return self:CompareCraftingRecipe(a_Recipe)
+	end
 end

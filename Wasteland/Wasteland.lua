@@ -32,6 +32,7 @@ function Initialize(Plugin)
 	-- Misc Hooks
 	cPluginManager.AddHook(cPluginManager.HOOK_PLAYER_BROKEN_BLOCK, OnBlockBroken)
 	cPluginManager.AddHook(cPluginManager.HOOK_PLAYER_RIGHT_CLICK, OnPlayerRightClick)
+	cPluginManager.AddHook(cPluginManager.HOOK_PLUGINS_LOADED, OnPluginsLoaded)
 
 	LOG("Initialized " .. PLUGIN:GetName() .. " v." .. PLUGIN:GetVersion())
 
@@ -40,6 +41,20 @@ end
 
 function OnDisable()
 	LOG("Disabled " .. PLUGIN:GetName() .. "!")
+end
+
+function OnBlockTick(World, BlockX, BlockY, BlockZ, BlockType, BlockMeta, SkyLight, BlockLight)
+	LOG("Ticked block of type: " .. BlockType)
+end
+
+function OnPluginsLoaded()
+	local PluginManager = cPluginManager.Get()
+	if PluginManager:IsPluginLoaded('Ticker') then
+		local E_BLOCK_ANY, E_META_ANY = PluginManager:CallPlugin('Ticker', 'GetAnyMarkers')
+		PluginManager:CallPlugin('Ticker', 'RegisterCallback', 'world', E_BLOCK_ANY, E_BLOCK_ANY, PLUGIN:GetName(), 'OnBlockTick')
+	else
+		LOG("Some features will not be available without the Ticker plugin installed.")
+	end
 end
 
 
