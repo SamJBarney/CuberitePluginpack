@@ -5,11 +5,15 @@ dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Items.lua")
 
 -- Crafting Related
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/CraftingRecipe.lua")
-dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Recipies.lua")
+dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Recipes.lua")
 
 -- Hook Files
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/BreakBlockHooks.lua")
 dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/RightClickHooks.lua")
+
+-- Block Tick Handling
+dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/Lib/TickerLib.lua")
+dofile(cPluginManager:GetPluginsPath() .. "/Wasteland/BlockTickHandlers.lua")
 
 local RegisteredWorlds = {}
 
@@ -32,7 +36,13 @@ function Initialize(Plugin)
 	-- Misc Hooks
 	cPluginManager.AddHook(cPluginManager.HOOK_PLAYER_BROKEN_BLOCK, OnBlockBroken)
 	cPluginManager.AddHook(cPluginManager.HOOK_PLAYER_RIGHT_CLICK, OnPlayerRightClick)
-	cPluginManager.AddHook(cPluginManager.HOOK_PLUGINS_LOADED, OnPluginsLoaded)
+
+	-- 
+	TickerSetup()
+
+	RegisterTickerCallback('world', E_BLOCK_GRASS, E_META_ANY, OnTickGrassBlock)
+	RegisterTickerCallback('world', E_BLOCK_FARMLAND, E_META_ANY, OnTickGrassBlock)
+	RegisterTickerCallback('world', E_BLOCK_ANY, E_META_ANY, OnMagmaCore)
 
 	LOG("Initialized " .. PLUGIN:GetName() .. " v." .. PLUGIN:GetVersion())
 
@@ -41,20 +51,6 @@ end
 
 function OnDisable()
 	LOG("Disabled " .. PLUGIN:GetName() .. "!")
-end
-
-function OnBlockTick(World, BlockX, BlockY, BlockZ, BlockType, BlockMeta, SkyLight, BlockLight)
-	LOG("Ticked block of type: " .. BlockType)
-end
-
-function OnPluginsLoaded()
-	local PluginManager = cPluginManager.Get()
-	if PluginManager:IsPluginLoaded('Ticker') then
-		local E_BLOCK_ANY, E_META_ANY = PluginManager:CallPlugin('Ticker', 'GetAnyMarkers')
-		PluginManager:CallPlugin('Ticker', 'RegisterCallback', 'world', E_BLOCK_ANY, E_BLOCK_ANY, PLUGIN:GetName(), 'OnBlockTick')
-	else
-		LOG("Some features will not be available without the Ticker plugin installed.")
-	end
 end
 
 
@@ -106,34 +102,17 @@ end
 -- Crafting Callbacks
 function OnPreCrafting(Player, Grid, Recipe)
 	local recipe_found = false
-	local possible_recipie = {};
 
-	local width = Grid:GetWidth()
-	local height = Grid:GetHeight()
-
-	for x = 1,3 do
-		for y = 1,3 do
-			if (x <= width and y <= height) then
-				local item = Grid:GetItem(x - 1,y - 1)
-				if (item ~= nil and item.m_ItemCount ~= 0) then
-					table.insert(possible_recipie, item)
-				else
-					table.insert(possible_recipie, nil)
-				end
-			else
-				table.insert(possible_recipie, nil)
-			end
-		end
-	end
-
-	for i,recipe in ipairs(wasteland_Recipies) do 
-		if recipe:Compare(Grid) then
+	for i,recipe in ipairs(wasteland_Recipes) do 
+		if recipe ~= nil and CraftingRecipe_Compare(recipe,Grid) then
 			recipe_found = true
-			Recipe:SetResult(recipe:GetResult())
+			local result = CraftingRecipe_GetResult(recipe):CopyOne()
+			result.m_ItemCount = CraftingRecipe_GetResult(recipe).m_ItemCount
+			Recipe:SetResult(result)
 
-			for x = 0, recipe:GetWidth() - 1 do
-				for y = 0, recipe:GetHeight() - 1 do
-					Recipe:SetIngredient(x,y, recipe:GetItem(x,y))
+			for x = 0, CraftingRecipe_GetWidth(recipe) - 1 do
+				for y = 0, CraftingRecipe_GetHeight(recipe) - 1 do
+					Recipe:SetIngredient(x,y, CraftingRecipe_GetItem(recipe, x,y):CopyOne())
 				end
 			end
 			break

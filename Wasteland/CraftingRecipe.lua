@@ -1,13 +1,11 @@
-CraftingRecipe = {}
-CraftingRecipe.__index = { width=3, height=3, items={}, result=cItem()}
 
-function CraftingRecipe:GetIndex(X,Y)
-	return y * self.width + x + 1
+
+function CraftingRecipe_GetIndex(self, X,Y)
+	return Y * self.width + X + 1
 end
 
-function CraftingRecipe.new(width, height)
-	local tmp = {}
-	setmetatable(tmp, CraftingRecipe)
+function CraftingRecipe_new(width, height)
+	local tmp = { width=3, height=3, items={}, result=cItem()}
 
 	-- set values
 	if width ~= nil then tmp.width = width end
@@ -16,7 +14,7 @@ function CraftingRecipe.new(width, height)
 	-- Initialize item grid
 	for x = 1,tmp.width do
 		for y = 1, tmp.height do
-			tmp.items[tmp:GetIndex(x,y)] = cItem()
+			tmp.items[CraftingRecipe_GetIndex(tmp,x,y)] = cItem()
 		end
 	end
 
@@ -24,17 +22,25 @@ function CraftingRecipe.new(width, height)
 	return tmp
 end
 
-function CraftingRecipe:GetItem(X,Y)
+function CraftingRecipe_GetWidth(self)
+	return self.width
+end
+
+function CraftingRecipe_GetHeight(self)
+	return self.height
+end
+
+function CraftingRecipe_GetItem(self, X,Y)
 	if X >= self.width or Y >= self.height or X < 0 or Y < 0 then return false end
-	local idx = self:GetIndex(X,Y)
+	local idx = CraftingRecipe_GetIndex(self, X,Y)
 	return self.items[idx]
 end
 
-function CraftingRecipe:SetItem(X, Y, a_Item)
+function CraftingRecipe_SetItem(self, X, Y, a_Item)
 	if X >= self.width or Y >= self.height or X < 0 or Y < 0 then return false end
 
 	-- Get the index
-	local idx = self:GetIndex(X,Y)
+	local idx = CraftingRecipe_GetIndex(self,X,Y)
 	-- Get the previous value
 	local previous = self.items[idx]
 
@@ -43,29 +49,29 @@ function CraftingRecipe:SetItem(X, Y, a_Item)
 	return previous
 end
 
-function CraftingRecipe:GetResult() 
-	return result
+function CraftingRecipe_GetResult(self) 
+	return self.result
 end
 
-function CraftingRecipe:SetResult(a_Item)
+function CraftingRecipe_SetResult(self, a_Item)
 	local previous = self.result
 	self.result = a_Item
 	return previous
 end
 
-function CraftingRecipe:ClearItem(X,Y)
-	return self:SetItem(X,Y, cItem())
+function CraftingRecipe_ClearItem(self, X,Y)
+	return CraftingRecipe_SetItem(self, X,Y, cItem())
 end
 
 -- Returns true when the two CraftingRecipe objects have the same crafting inputs
-function CraftingRecipe:CompareCraftingRecipe(a_Recipe)
+function CraftingRecipe_CompareCraftingRecipe(self, a_Recipe)
 	if a_Recipe.width ~= self.width or a_Recipe.height ~= self.height then return false end
 
 	local equal = true
 
 	for x=0,self.width-1 do
 		for y=0,self.height-1 do
-			local idx = self:GetIndex(x,y)
+			local idx = CraftingRecipe_GetIndex(self, x,y)
 			local i1 = self.items[idx]
 			local i2 = a_Recipe.items[idx]
 			equal = equal and i1.m_ItemType == i2.m_ItemType and i1.m_ItemDamage == i2.m_ItemDamage and i1.m_CustomName == i2.m_CustomName
@@ -78,18 +84,25 @@ function CraftingRecipe:CompareCraftingRecipe(a_Recipe)
 	return true
 end
 
-function CraftingRecipe:CompareCraftingGrid(a_Grid)
+function CraftingRecipe_CompareCraftingGrid(self, a_Grid)
 	local found = false
 	local matching_positions = {}
-	for x_offset = 0, a_Grid:GetWidth() - self:GetWidth() do
-		for y_offset = 0, a_Grid:GetHeight() - self:GetHeight() do
+	local offset_width = a_Grid:GetWidth() - CraftingRecipe_GetWidth(self)
+	local offset_height = a_Grid:GetHeight() - CraftingRecipe_GetHeight(self)
+	LOG('Recipe height: ' .. CraftingRecipe_GetHeight(self))
+	LOG('offset_width: ' .. offset_width)
+	LOG('offset_height: ' .. offset_height)
+	for x_offset = 0, offset_width do
+		LOG('x_offset: ' .. x_offset)
+		for y_offset = 0, a_Grid:GetHeight() - CraftingRecipe_GetHeight(self) do
+			LOG('y_offset: ' .. y_offset)
 			local equal = true
-			for x = 0,self:GetWidth()-1 do
-				for y=0,self:GetHeight()-1 do
-					local i1 = self:GetItem(x, y)
+			for x = 0,CraftingRecipe_GetWidth(self)-1 do
+				for y=0,CraftingRecipe_GetHeight(self)-1 do
+					local i1 = CraftingRecipe_GetItem(self, x, y)
 					local i2 = a_Grid:GetItem(x+x_offset, y+y_offset)
 					equal = equal and i1.m_ItemType == i2.m_ItemType and i1.m_ItemDamage == i2.m_ItemDamage and i1.m_CustomName == i2.m_CustomName
-					matching_positions[self:GetIndex(x,y)] = true
+					matching_positions[CraftingRecipe_GetIndex(self, x,y)] = true
 				end
 			end
 			if equal then
@@ -102,10 +115,10 @@ function CraftingRecipe:CompareCraftingGrid(a_Grid)
 		if found then break end
 	end
 
-	if found then
+	if found  then
 		for x=0,a_Grid:GetWidth() - 1 do
 			for y=0,a_Grid:GetHeight()-1 do
-				local idx = y * a_Grid:GetWidth() + x + 1
+				local idx = CraftingRecipe_GetIndex(self, x,y)
 				if matching_positions[idx] == nil then
 					local item = a_Grid:GetItem(x,y)
 					if item.m_ItemCount ~= 0 then
@@ -122,10 +135,10 @@ function CraftingRecipe:CompareCraftingGrid(a_Grid)
 end
 
 
-function CraftingRecipe:Compare(a_Comparable, isCraftingRecipeType)
+function CraftingRecipe_Compare(self, a_Comparable, isCraftingRecipeType)
 	if isCraftingRecipeType == nil then
-		return self:CompareCraftingGrid(a_Comparable)
+		return CraftingRecipe_CompareCraftingGrid(self, a_Comparable)
 	else
-		return self:CompareCraftingRecipe(a_Recipe)
+		return CraftingRecipe_CompareCraftingRecipe(self, a_Recipe)
 	end
 end
