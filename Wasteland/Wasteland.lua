@@ -110,9 +110,9 @@ function OnPreCrafting(Player, Grid, Recipe)
 			result.m_ItemCount = CraftingRecipe_GetResult(recipe).m_ItemCount
 			Recipe:SetResult(result)
 
-			for x = 0, CraftingRecipe_GetWidth(recipe) - 1 do
-				for y = 0, CraftingRecipe_GetHeight(recipe) - 1 do
-					Recipe:SetIngredient(x,y, CraftingRecipe_GetItem(recipe, x,y):CopyOne())
+			for x = 0, Grid:GetWidth() - 1 do
+				for y = 0, Grid:GetHeight() - 1 do
+					Recipe:SetIngredient(x,y, Grid:GetItem(x,y):CopyOne())
 				end
 			end
 			break
