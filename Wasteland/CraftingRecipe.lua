@@ -97,7 +97,7 @@ function CraftingRecipe_CompareCraftingGrid(self, a_Grid)
 					local i1 = CraftingRecipe_GetItem(self, x, y)
 					local i2 = a_Grid:GetItem(x+x_offset, y+y_offset)
 					equal = equal and i1.m_ItemType == i2.m_ItemType and i1.m_ItemDamage == i2.m_ItemDamage and i1.m_CustomName == i2.m_CustomName
-					matching_positions[CraftingRecipe_GetIndex(self, x,y)] = true
+					matching_positions[(x_offset + x) .. (y_offset+y)] = true
 				end
 			end
 			if equal then
@@ -113,7 +113,7 @@ function CraftingRecipe_CompareCraftingGrid(self, a_Grid)
 	if found  then
 		for x=0,a_Grid:GetWidth() - 1 do
 			for y=0,a_Grid:GetHeight()-1 do
-				local idx = CraftingRecipe_GetIndex(self, x,y)
+				local idx = x .. y
 				if matching_positions[idx] == nil then
 					local item = a_Grid:GetItem(x,y)
 					if item.m_ItemCount ~= 0 then
