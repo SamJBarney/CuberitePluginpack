@@ -1,5 +1,5 @@
-local E_BLOCK_ANY = -1
-local E_META_ANY = -1
+E_BLOCK_ANY = -1
+E_META_ANY = -1
 
 local CHUNK_WIDTH = 16
 local CHUNK_HEIGHT = 256
@@ -7,11 +7,18 @@ local CHUNK_HEIGHT = 256
 local TickRegistry = {}
 local ChunkRegistry = {}
 
-function GetAnyMarkers()
-	return E_BLOCK_ANY, E_META_ANY
+local issetup = false
+
+function TickerSetup()
+	if not issetup then
+		cPluginManager.AddHook(cPluginManager.HOOK_WORLD_TICK, OnWorldTick)
+		cPluginManager.AddHook(cPluginManager.HOOK_CHUNK_AVAILABLE, OnChunkAvailable)
+		cPluginManager.AddHook(cPluginManager.HOOK_CHUNK_UNLOADING, OnChunkUnloading)
+		issetup = true
+	end
 end
 
-function RegisterCallback(WorldName, BlockId, BlockMeta, a_Plugin, a_Callback)
+function RegisterTickerCallback(WorldName, BlockId, BlockMeta, a_Callback)
 	if TickRegistry[WorldName] == nil then
 		TickRegistry[WorldName] = {}
 		TickRegistry[WorldName][BlockId] = {}
@@ -26,23 +33,22 @@ function RegisterCallback(WorldName, BlockId, BlockMeta, a_Plugin, a_Callback)
 		TickRegistry[WorldName][BlockId][BlockMeta] = {}
 	end
 
-	local already_exists = false
-	for i,callback in ipairs(TickRegistry[WorldName][BlockId][BlockMeta]) do
-		if callback.plugin == a_Plugin and callback.theCallback == a_Callback then
-			already_exists = true
-			break
-		end
-	end
+	-- local already_exists = false
+	-- for i,callback in ipairs(TickRegistry[WorldName][BlockId][BlockMeta]) do
+	-- 	if callback.theCallback == a_Callback then
+	-- 		already_exists = true
+	-- 		break
+	-- 	end
+	-- end
 
-	if not already_exists and a_Callback ~= nil then
-
+	if a_Callback ~= nil then
 		table.insert(TickRegistry[WorldName][BlockId][BlockMeta], {theCallback = a_Callback, remove = false})
 		return true
 	end
 	return false
 end
 
-function UnregisterCallback(WorldName, BlockId, BlockMeta, a_Callback)
+function UnregisterTickerCallback(WorldName, BlockId, BlockMeta, a_Callback)
 	if TickRegistry[WorldName] == nil or TickRegistry[WorldName][BlockId] == nil or TickRegistry[WorldName][BlockId][BlockMeta] == nil then
 		return false
 	end
@@ -55,28 +61,6 @@ function UnregisterCallback(WorldName, BlockId, BlockMeta, a_Callback)
 	end
 
 	return false
-end
-
-function Initialize(Plugin)
-	-- Load the Info.lua file
-	dofile(cPluginManager:GetPluginsPath() .. "/Ticker/Info.lua")
-
-	PLUGIN = Plugin
-
-	PLUGIN:SetName(g_PluginInfo.Name)
-	PLUGIN:SetVersion(g_PluginInfo.Version)
-
-	-- Callbacks
-	cPluginManager.AddHook(cPluginManager.HOOK_WORLD_TICK, OnWorldTick)
-	cPluginManager.AddHook(cPluginManager.HOOK_CHUNK_AVAILABLE, OnChunkAvailable)
-	cPluginManager.AddHook(cPluginManager.HOOK_CHUNK_UNLOADING, OnChunkUnloading)
-
-	LOG("Initialized " .. PLUGIN:GetName() .. " v." .. PLUGIN:GetVersion())
-	return true
-end
-
-function OnDisable()
-	LOG("Disabled " .. PLUGIN:GetName() .. "!")
 end
 
 function OnChunkAvailable(World, ChunkX, ChunkZ)
@@ -106,7 +90,7 @@ function OnWorldTick(World, TimeDelta)
 end
 
 
-local function TickChunk(World, TimeDelta, a_Chunk)
+function TickChunk(World, TimeDelta, a_Chunk)
 	local RandomX = math.random(0,16777215)
 	local RandomY = math.random(0,16777215)
 	local RandomZ = math.random(0,16777215)
@@ -124,15 +108,21 @@ local function TickChunk(World, TimeDelta, a_Chunk)
 		a_Chunk.TickZ = math.floor(TickZ / 2)
 	end
 
-	local Valid, BlockType, BlockMeta, SkyLight, BlockLight = World:GetBlockInfo(a_Chunk.TickX, a_Chunk.TickY, a_Chunk.TickZ)
+	TickX = a_Chunk.TickX + a_Chunk.x * CHUNK_WIDTH
+	TickZ = a_Chunk.TickZ + a_Chunk.z * CHUNK_WIDTH
+	TickY = a_Chunk.TickY
+
+	local Valid, BlockType, BlockMeta, SkyLight, BlockLight = World:GetBlockInfo(TickX, TickY, TickZ)
 
 	local WorldName = World:GetName()
 
 	if TickRegistry[WorldName][BlockType] ~= nil then
 		if TickRegistry[WorldName][BlockType][BlockMeta] ~= nil then
-			for i,callback in iparis(TickRegistry[WorldName][BlockType][BlockMeta]) do
+			for i,callback in ipairs(TickRegistry[WorldName][BlockType][BlockMeta]) do
 				if callback.remove ~= true then
-					callback.theCallback(World, a_Chunk.TickX, a_Chunk.TickY, a_Chunk.TickZ, BlockType, BlockMeta, SkyLight, BlockLight)
+					if callback.theCallback(World, TickX, TickY, TickZ, BlockType, BlockMeta, SkyLight, BlockLight) then
+						break
+					end
 				else
 					TickRegistry[WorldName][BlockType][BlockMeta][i] = nil
 				end
@@ -140,22 +130,28 @@ local function TickChunk(World, TimeDelta, a_Chunk)
 		end
 
 		if TickRegistry[WorldName][BlockType][E_META_ANY] ~= nil then
-			for i,callback in iparis(TickRegistry[WorldName][BlockType][E_META_ANY]) do
+			for i,callback in ipairs(TickRegistry[WorldName][BlockType][E_META_ANY]) do
 				if callback.remove ~= true then
-					callback.theCallback(World, a_Chunk.TickX, a_Chunk.TickY, a_Chunk.TickZ, BlockType, BlockMeta, SkyLight, BlockLight)
+					if callback.theCallback(World, TickX, TickY, TickZ, BlockType, BlockMeta, SkyLight, BlockLight) then
+						break
+					end
 				else
 					TickRegistry[WorldName][BlockType][E_META_ANY][i] = nil
 				end
 			end
 		end
+	end
 
-		if TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY] ~= nil then
-			for i,callback in iparis(TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY]) do
-				if callback.remove ~= true then
-					callback.theCallback(World, a_Chunk.TickX, a_Chunk.TickY, a_Chunk.TickZ, BlockType, BlockMeta, SkyLight, BlockLight)
-				else
-					TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY][i] = nil
+	Valid, BlockType, BlockMeta, SkyLight, BlockLight = World:GetBlockInfo(TickX, TickY, TickZ)
+
+	if TickRegistry[WorldName][E_BLOCK_ANY] ~= nil and TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY] ~= nil then
+		for i,callback in ipairs(TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY]) do
+			if callback.remove ~= true then
+				if callback.theCallback(World, TickX, TickY, TickZ, BlockType, BlockMeta, SkyLight, BlockLight) then
+					break
 				end
+			else
+				TickRegistry[WorldName][E_BLOCK_ANY][E_META_ANY][i] = nil
 			end
 		end
 	end
