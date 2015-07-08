@@ -89,13 +89,8 @@ function CraftingRecipe_CompareCraftingGrid(self, a_Grid)
 	local matching_positions = {}
 	local offset_width = a_Grid:GetWidth() - CraftingRecipe_GetWidth(self)
 	local offset_height = a_Grid:GetHeight() - CraftingRecipe_GetHeight(self)
-	LOG('Recipe height: ' .. CraftingRecipe_GetHeight(self))
-	LOG('offset_width: ' .. offset_width)
-	LOG('offset_height: ' .. offset_height)
 	for x_offset = 0, offset_width do
-		LOG('x_offset: ' .. x_offset)
 		for y_offset = 0, a_Grid:GetHeight() - CraftingRecipe_GetHeight(self) do
-			LOG('y_offset: ' .. y_offset)
 			local equal = true
 			for x = 0,CraftingRecipe_GetWidth(self)-1 do
 				for y=0,CraftingRecipe_GetHeight(self)-1 do
