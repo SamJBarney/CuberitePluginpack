@@ -68,7 +68,7 @@ function OnChunkAvailable(World, ChunkX, ChunkZ)
 	if ChunkRegistry[WorldName] == nil then
 		ChunkRegistry[WorldName] = {}
 	end
-	ChunkRegistry[WorldName][ChunkX .. ChunkZ] = {x=ChunkX, z=ChunkZ, TickX=0, TickY=0, TickZ=0}
+	ChunkRegistry[WorldName][ChunkX .. "," .. ChunkZ] = {x=ChunkX, z=ChunkZ, TickX=0, TickY=0, TickZ=0}
 
 end
 
@@ -76,7 +76,9 @@ end
 function OnChunkUnloading(World, ChunkX, ChunkZ)
 	local WorldName = World:GetName()
 
-	ChunkRegistry[WorldName][ChunkX .. ChunkZ] = nil
+	if (ChunkRegistry[WorldName]) then
+		ChunkRegistry[WorldName][ChunkX .. "," .. ChunkZ] = nil
+	end
 end
 
 
@@ -91,6 +93,21 @@ end
 
 
 function TickChunk(World, TimeDelta, a_Chunk)
+	-- Only tick the chunk if all of its neighbors are loaded (to avoid force-loading the neighbors):
+	local ChunkReg = ChunkRegistry[World:GetName()] or {}
+	if (
+		not(ChunkReg[(a_Chunk.x - 1) .. "," .. (a_Chunk.z + 1)]) or
+		not(ChunkReg[(a_Chunk.x - 1) .. "," .. a_Chunk.z]) or
+		not(ChunkReg[(a_Chunk.x - 1) .. "," .. (a_Chunk.z - 1)]) or
+		not(ChunkReg[a_Chunk.x       .. "," .. (a_Chunk.z + 1)]) or
+		not(ChunkReg[a_Chunk.x       .. "," .. (a_Chunk.z - 1)]) or
+		not(ChunkReg[(a_Chunk.x + 1) .. "," .. (a_Chunk.z + 1)]) or
+		not(ChunkReg[(a_Chunk.x + 1) .. "," .. a_Chunk.z]) or
+		not(ChunkReg[(a_Chunk.x + 1) .. "," .. (a_Chunk.z - 1)])
+	) then
+		return
+	end
+	
 	local RandomX = math.random(0,16777215)
 	local RandomY = math.random(0,16777215)
 	local RandomZ = math.random(0,16777215)
