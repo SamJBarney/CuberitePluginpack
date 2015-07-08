@@ -9,7 +9,7 @@ end
 
 function OnMagmaCore(World, BlockX, BlockY, BlockZ, BlockType, BlockMeta, SkyLight, BlockLight)
 	if BlockY < 5 and BlockType ~= E_BLOCK_BEDROCK and BlockType ~= E_BLOCK_STATIONARY_WATER and BlockType ~= E_BLOCK_WATER and BlockType ~= E_BLOCK_STATIONARY_LAVA then
-		World:SetBlock(BlockX, BlockY, BlockZ, E_BLOCK_STATIONARY_LAVA, 0)
+		World:FastSetBlock(BlockX, BlockY, BlockZ, E_BLOCK_STATIONARY_LAVA, 0)
 		return true
 	end
 end
