@@ -93,6 +93,8 @@ function OnChunkGenerated(World, ChunkX, ChunkZ, ChunkDesc)
 				end
 			end
 		end
+		
+		ChunkDesc:UpdateHeightmap()
 
 		return true
 	--end
